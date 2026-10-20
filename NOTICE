@@ -1,0 +1,12 @@
+GeoLogHelper / 寻宝手记
+
+This project contains a Python adaptation of authentication and logging code
+from c:geo (https://github.com/cgeo/cgeo), distributed under Apache License 2.0.
+
+Source revision: d23e863148ca64cb1d51bee6e10d776c657a6a94
+Original files: GCAuthAPI.java and GCLogAPI.java
+The original source files are retained under upstream/ for attribution.
+The modifications and other dependency licenses are described in THIRD_PARTY.md.
+
+Geocaching and c:geo names identify the services and upstream project only.
+This independent project does not claim their endorsement.

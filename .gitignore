@@ -1,0 +1,24 @@
+# Local user content and authentication (never commit)
+/data/
+/.env
+/.env.*
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+
+# Installed Python / browser runtimes
+/.runtime/
+/.browsers/
+/.venv/
+/venv/
+__pycache__/
+*.py[cod]
+
+# Diagnostics, archives, editor state
+*.log
+*.zip
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
