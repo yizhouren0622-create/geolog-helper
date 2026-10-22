@@ -63,6 +63,23 @@ class TestCatalog(unittest.TestCase):
         self.assertEqual(self.store.sync_global()['state'], 'unconfigured')
         self.assertFalse(self.store.status()['global_configured'])
 
+    def test_targeted_forced_refresh_never_fetches_other_regions_or_bypasses_backoff(self):
+        self.store.set_meta('region:shanghai', {'next_update': time.time() + 86400})
+        calls = []
+        def fetch(item, skip):
+            calls.append(item['region'])
+            return {'caches': [], 'total': 0}
+        self.assertEqual(self.store.sync_regions(fetch, region_ids=['shanghai']), [])
+        self.store.sync_regions(fetch, True, ['shanghai'])
+        self.assertEqual(calls, ['shanghai'])
+        self.assertIsNone(self.store.meta('region:beijing'))
+        self.store.set_meta('backoff_until', time.time() + 3600)
+        self.assertEqual(self.store.sync_regions(fetch, True, ['shanghai']), [])
+        self.assertEqual(calls, ['shanghai'])
+        for selection in ([], ['unknown'], 'shanghai'):
+            with self.subTest(selection=selection), self.assertRaises(ValueError):
+                self.store.due_regions(True, selection)
+
     def test_rate_limit_keeps_pages_and_resumes_after_backoff(self):
         class Limited(Exception): retry_after = 3600
         def first(item, skip):

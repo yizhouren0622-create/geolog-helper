@@ -49,7 +49,10 @@ gc,name,lat,lng,type,status
 ```powershell
 .runtime\Scripts\python.exe sync_catalog.py --scope regions
 .runtime\Scripts\python.exe sync_catalog.py --scope global
+.runtime\Scripts\python.exe sync_catalog.py --scope regions --region shanghai --force
 ```
+
+`--region` 只更新选定地区（可重复指定）。`--force` 忽略15天更新日期，仍然遵守官网限流冷却；冷却期间不会向官网发请求。
 
 本次部署另有 Codex 定时跟进：地区每15天、全球每6个月尝试维护。它依赖电脑和 Codex 可用，不随 GitHub 源码自动安装到别人的电脑。登录过期或网络失败会保留旧数据，需要时由用户重新登录。
 
@@ -69,7 +72,7 @@ gc,name,lat,lng,type,status
 
 ## 已验证与尚未验证
 
-已通过 20 项隔离测试，覆盖发布去重、标题续传、自动保存与发布并发保护、FTF/DNF 校验、坐标解析、缺失坐标处理、名称及地图范围检索、分页游标、失败保留旧数据、限流暂停 / 分页进度恢复、CSV 导入回滚和更新周期。另已用登录账号只读验证官网藏宝点查询，并通过界面操作检查 DNF / FTF / TFTC 和检索流程。
+已通过 21 项隔离测试，覆盖发布去重、标题续传、自动保存与发布并发保护、FTF/DNF 校验、坐标解析、缺失坐标处理、名称及地图范围检索、分页游标、失败保留旧数据、限流暂停 / 分页进度恢复、CSV 导入回滚和更新周期。另已用登录账号只读验证官网藏宝点查询，并通过界面操作检查 DNF / FTF / TFTC 和检索流程。
 
 **已在 Windows 验证火狐账号登录和登录状态持久化。官网实际创建日志及照片上传尚未完成端到端验证；没有向任何藏宝点发送测试日志。** 网站接口可能变化；如果官网拒绝请求，保留草稿并按当前错误修复。实现基于 2026-10-18 的 c:geo 接口源码，不使用需要申请合作伙伴资格的 Groundspeak 开发者密钥。
 

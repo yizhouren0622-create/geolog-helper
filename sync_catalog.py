@@ -6,7 +6,10 @@ import time
 from urllib.request import HTTPCookieProcessor, ProxyHandler, Request, build_opener
 
 
-def run(scope='all'):
+def run(scope='all', regions=None, force=False):
+    options = {'scope': scope, 'force': force}
+    if regions is not None:
+        options['regions'] = regions
     url = 'http://127.0.0.1:8765'
     opener = build_opener(ProxyHandler({}), HTTPCookieProcessor(CookieJar()))
     try:
@@ -17,7 +20,7 @@ def run(scope='all'):
     if running:
         with opener.open(url + '/', timeout=5) as response:
             response.read()
-        request = Request(url + '/api/catalog/refresh', data=json.dumps({'scope': scope, 'force': False}).encode(),
+        request = Request(url + '/api/catalog/refresh', data=json.dumps(options).encode(),
                           headers={'Content-Type': 'application/json', 'Origin': url})
         with opener.open(request, timeout=10) as response:
             job_id = json.load(response)['job_id']
@@ -31,7 +34,7 @@ def run(scope='all'):
     from app import GCClient
     client = GCClient(headless=True)
     try:
-        return client.refresh_catalog({'scope': scope})
+        return client.refresh_catalog(options)
     finally:
         if client.ctx:
             client.ctx.close()
@@ -42,9 +45,14 @@ def run(scope='all'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--scope', choices=['all', 'regions', 'global'], default='all')
+    parser.add_argument('--region', action='append', choices=['shanghai', 'beijing', 'shenzhen', 'hongkong', 'macau', 'taiwan'],
+                        help='Only refresh selected regions; may be repeated.')
+    parser.add_argument('--force', action='store_true', help='Refresh before the scheduled date; still respects rate limits.')
     args = parser.parse_args()
+    if args.region and args.scope == 'global':
+        parser.error('--region cannot be combined with --scope global')
     try:
-        print(json.dumps(run(args.scope), ensure_ascii=False))
+        print(json.dumps(run('regions' if args.region else args.scope, args.region, args.force), ensure_ascii=False))
     except Exception:
         print(json.dumps({'state': 'error', 'message': '数据维护未完成；请检查登录或网络，旧数据已保留。'}, ensure_ascii=False))
         raise SystemExit(1)

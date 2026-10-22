@@ -233,19 +233,26 @@ class GCClient:
         options = options or {}
         scope = options.get('scope', 'all')
         force = options.get('force') is True
+        region_ids = options.get('regions')
+        try:
+            due_regions = CATALOG.due_regions(force, region_ids)
+        except ValueError as error:
+            raise Problem(str(error))
         result = {}
         temporary = self.ctx is None
         old_headless = self.headless
         try:
             if scope in ('all', 'global'):
                 result['global'] = CATALOG.sync_global(force)
-            if scope in ('all', 'regions') and CATALOG.due_regions(force):
+            if scope in ('all', 'regions') and due_regions:
                 if temporary:
                     self.headless = True  # Scheduled maintenance never opens login windows.
                 headers = self.auth()
                 result['regions'] = CATALOG.sync_regions(
-                    lambda item, skip: self.search_caches({**item, 'skip': skip}, headers, False), force)
+                    lambda item, skip: self.search_caches({**item, 'skip': skip}, headers, False), force, region_ids)
             result.update(message='数据更新检查已完成，请查看各区域的更新时间和完整度。', catalog=CATALOG.status())
+            if scope in ('all', 'regions') and time.time() < CATALOG.meta('backoff_until', 0):
+                result['message'] = '官网正在限流冷却，本次未完成刷新；旧数据可以继续使用。'
             return result
         finally:
             if temporary and self.ctx:

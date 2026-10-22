@@ -178,15 +178,20 @@ class Catalog:
                 'global': self.meta('global', {}), 'global_configured': bool(self.meta('global_url')),
                 'regional_interval_days': 15, 'global_interval_months': 6}
 
-    def due_regions(self, force=False):
+    def due_regions(self, force=False, region_ids=None):
+        if region_ids is not None:
+            if not isinstance(region_ids, list) or not region_ids or any(
+                    value not in {r['id'] for r in REGIONS} for value in region_ids):
+                raise ValueError('请选择有效的更新地区')
         now = time.time()
         if now < self.meta('backoff_until', 0):
             return []
-        return [r for r in REGIONS if force or now >= self.meta('region:' + r['id'], {}).get('next_update', 0)]
+        return [r for r in REGIONS if (region_ids is None or r['id'] in region_ids)
+                and (force or now >= self.meta('region:' + r['id'], {}).get('next_update', 0))]
 
-    def sync_regions(self, fetch, force=False):
+    def sync_regions(self, fetch, force=False, region_ids=None):
         results = []
-        for region in self.due_regions(force):
+        for region in self.due_regions(force, region_ids):
             info = self.meta('region:' + region['id'], {})
             recent_resume = time.time() - info.get('resume_since', 0) < 86400
             start = info.get('resume_skip', 0) if recent_resume else 0
