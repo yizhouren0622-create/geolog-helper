@@ -5,10 +5,11 @@
 - c:geo — https://github.com/cgeo/cgeo
   - 版本：`d23e863148ca64cb1d51bee6e10d776c657a6a94`（2026-10-18）
   - Apache License 2.0。项目原许可保留在 LICENSE。
-  - 依据 `main/src/main/java/cgeo/geocaching/connector/gc/GCAuthAPI.java` 和 `GCLogAPI.java` 中的认证、CSRF、tRPC 日志创建、multipart 图片上传与标题更新方法，改写为 Python 的 GCClient；原 Java 源码保留在 `upstream/`。
+  - 依据 `main/src/main/java/cgeo/geocaching/connector/gc/GCAuthAPI.java`、`GCLogAPI.java` 和 `GCWebAPI.java` 中的认证、CSRF、tRPC 日志创建、multipart 图片上传与标题更新方法，改写为 Python 的 GCClient；原 Java 源码保留在 `upstream/`。
   - 改动：独立火狐浏览器登录，Python/Playwright 请求，本地 SQLite 草稿，照片压缩去元数据，发布前预览，已确认 ID 持久化，未知结果需用户核对后再试。未移植 c:geo Android 界面、Trackable 或删除功能。
 - Playwright Python — https://github.com/microsoft/playwright-python （Apache-2.0），版本 1.64.0。
 - Firefox — https://www.mozilla.org/firefox/ ，使用 Playwright 官方分发的兼容构建 Firefox 157.0 / revision 1555，安装在本项目 `.browsers/` 中，未替换系统浏览器。Firefox 的许可信息可在其 `about:license` 页面查看；Playwright 兼容性说明：https://playwright.dev/python/docs/browsers#firefox 。独立配置位于 `data/firefox-profile/`。
+- Leaflet 1.9.4 — https://leafletjs.com/ （BSD-2-Clause），本地文件在 `vendor/`，许可在 `vendor/Leaflet-LICENSE`。JS/CSS 对照官方发布的 SHA-256 校验值验证。底图来自 OpenStreetMap，显示署名链接，不批量下载瓦片。
 - Pillow — https://github.com/python-pillow/Pillow （MIT-CMU），版本 13.0.0，生成去 EXIF 的 JPEG 上传副本。依赖本身的许可随安装包保留。
 
 ## 查找过的现成工具

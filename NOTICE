@@ -4,9 +4,12 @@ This project contains a Python adaptation of authentication and logging code
 from c:geo (https://github.com/cgeo/cgeo), distributed under Apache License 2.0.
 
 Source revision: d23e863148ca64cb1d51bee6e10d776c657a6a94
-Original files: GCAuthAPI.java and GCLogAPI.java
+Original files: GCAuthAPI.java, GCLogAPI.java and GCWebAPI.java
 The original source files are retained under upstream/ for attribution.
 The modifications and other dependency licenses are described in THIRD_PARTY.md.
 
 Geocaching and c:geo names identify the services and upstream project only.
 This independent project does not claim their endorsement.
+
+Leaflet 1.9.4 is distributed under the BSD 2-Clause license.
+Its original license is included in vendor/Leaflet-LICENSE.

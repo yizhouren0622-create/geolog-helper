@@ -4,16 +4,19 @@ import importlib.util
 import io
 import json
 import os
+import sys
 from pathlib import Path
 import tempfile
 import unittest
 import concurrent.futures
 import threading
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import ProxyHandler, Request, build_opener
 
 TEST_DATA = tempfile.TemporaryDirectory()
 os.environ['GEOLOG_DATA'] = TEST_DATA.name
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 spec = importlib.util.spec_from_file_location('app', Path(__file__).resolve().parents[1] / 'app.py')
 app = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(app)
@@ -97,6 +100,35 @@ class TestPublishing(unittest.TestCase):
         with self.assertRaises(app.Problem): app.publish(d['id'],FakeClient())
         d['text']='真实'; d['date']='2099-01-01'; app.save(d)
         with self.assertRaises(app.Problem): app.publish(d['id'],FakeClient())
+    def test_ftf_cannot_be_published_as_dnf(self):
+        d = self.draft()
+        d.update(type=3, ftf=True)
+        app.save(d)
+        client = FakeClient()
+        with self.assertRaises(app.Problem):
+            app.publish(d['id'], client)
+        self.assertEqual(client.creates, 0)
+    def test_name_search_filters_server_results_and_keeps_scan_cursor(self):
+        class Response:
+            ok = True
+            status = 200
+            headers = {'content-type': 'application/json'}
+            def __init__(self, rows): self.rows = rows
+            def json(self): return {'results': self.rows, 'total': 150}
+        class Request:
+            def get(self, url, params, **kwargs):
+                skip = int(params['skip'])
+                rows = [{'code': 'GC' + str(i), 'name': 'Park' if i == 120 else 'Unrelated'}
+                        for i in range(skip, min(skip + 100, 150))]
+                return Response(rows)
+        class Context: request = Request()
+        client = app.GCClient()
+        client.ctx = Context()
+        with patch.object(app.time, 'sleep'):
+            result = client.search_caches({'keyword': 'Park', 'region': 'shanghai'}, headers={'test': 'only'}, store=False)
+        self.assertEqual([row['gc'] for row in result['caches']], ['GC120'])
+        self.assertEqual(result['next_skip'], 150)
+        self.assertFalse(result['has_more'])
     def test_image_upload_copy_has_no_exif_and_is_compressed(self):
         from PIL import Image
         image=Image.new('RGB',(3000,2400),'green')
@@ -166,6 +198,43 @@ class TestLocalEndpoints(unittest.TestCase):
         self.assertEqual(self.post(draft)[0], 200)
         self.assertEqual(self.post(draft)[0], 400)
         self.assertEqual(len(self.calls), 1)
+
+    def test_inflight_autosave_cannot_unlock_a_queued_publish(self):
+        draft = app.new_draft()
+        draft.update(gc='GC12345', text='本地测试，禁止发布')
+        app.save(draft)
+        read, release = threading.Event(), threading.Event()
+        original_get = app.get
+        result = []
+        def delayed_get(draft_id):
+            value = original_get(draft_id)
+            if not read.is_set():
+                read.set()
+                if not release.wait(5):
+                    raise RuntimeError('test coordination timed out')
+            return value
+        def autosave():
+            req = Request(self.url + '/api/save',
+                data=json.dumps({'id': draft['id'], 'text': 'outdated autosave'}).encode(),
+                headers={'Content-Type': 'application/json', 'Origin': self.url,
+                         'Cookie': 'geolog=' + app.SESSION})
+            try:
+                with self.opener.open(req, timeout=5) as response:
+                    result.append(response.status)
+            except HTTPError as error:
+                result.append(error.code)
+        with patch.object(app, 'get', side_effect=delayed_get):
+            thread = threading.Thread(target=autosave)
+            thread.start()
+            try:
+                self.assertTrue(read.wait(3))
+                self.assertEqual(self.post(draft)[0], 200)
+            finally:
+                release.set()
+                thread.join(5)
+        self.assertEqual(result, [400])
+        self.assertEqual(app.get(draft['id'])['state'], 'queued')
+        self.assertEqual(app.get(draft['id'])['text'], '本地测试，禁止发布')
 
 if __name__=='__main__':
     unittest.main()

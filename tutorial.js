@@ -11,8 +11,8 @@
     {
       label: '地点', title: '一篇手记，对应一次真实寻宝', target: '#gc',
       intro: '先点左侧“＋ 新建日志”，把不同藏宝点的回忆分开保存。',
-      instructions: ['在“GC 编号或藏宝点链接”里粘贴官网的 GC 编号或链接。', '核对实际寻宝日期，再选择“找到了”“没找到”“留言”或“参加活动”。', '手记名字只用于帮你辨认草稿，可以不填。'],
-      tip: '日期默认是今天，补写旧日志时记得改日期。草稿会自动保存在这台电脑。'
+      instructions: ['选常用地区，输入名称或经纬度；拖动地图后点“搜索当前地图范围”，在结果或标记上点“选择”。也可直接粘贴 GC 编号。', '想用官网？点“官网地图”，在专用火狐里打开具体藏宝点详情，再回助手点“带回官网选中的点”。', '核对实际日期，点选“找到了”或“没找到 DNF”等日志类型。不同藏宝点建议新建不同手记。'],
+      tip: '地图显示账号实际可见的数据；缺少坐标的点只显示在列表。日期默认今天，补写旧日志时记得改日期。'
     },
     {
       label: '照片', title: '选几张照片，找回当时的记忆', target: '#drop',
@@ -23,8 +23,8 @@
     {
       label: '描述', title: '点几句话，少敲一点字', target: '#chips',
       intro: '只点选当时实际发生的经历，比如“藏得巧妙”或“感谢藏主”。',
-      instructions: ['点击描述词，选中的词会变绿；再点一次可以取消。', '想多说一点，就写在“还想补充一点”里；不补充也可以。', '最后读一遍“日志内容”，可以直接编辑正文。手动改好正文后，再点描述词或重新生成会重组文字。'],
-      tip: '助手组合你选的话，不会从照片猜测经历。“没找到”时，请核对正文里没有“已签日志”等不符合实际的描述。'
+      instructions: ['FTF（首找）和 TFTC（感谢藏主）有独立按钮；FTF 只在“找到了”类型下可选。', '点击描述词后会加入正文，再点一次可移除对应的句子；你手动写的其他文字会保留。', '最后读一遍正文。点“按选择重新生成正文”会替换正文，手动编辑过时会先请你确认。'],
+      tip: '选择 DNF 会关闭找到、首找和签名描述。助手不会从照片猜测经历，仍请核对最终正文符合实际。'
     },
     {
       label: '预览', title: '先看预览，想发的时候再确认', target: '#publish',
@@ -36,13 +36,13 @@
       label: '之后', title: '发出后看结果，中途也能继续', target: '#drafts',
       intro: '左侧每篇手记都会显示进度，方便以后接着处理。',
       instructions: ['看到“已发布”，表示文字和所选照片都已完成；可点“到官网查看”核对。', '如果显示“照片待完成”，继续操作会补传未完成的照片；已经成功的文字不会重发。', '如果显示“待核对”，先打开官网确认，再关联已有 GL 编号或按提示处理；不要直接重复提交。'],
-      tip: '正文发布后，请到官网编辑。以后随时点左侧“使用教程”，都能重新查看这六步。'
+      tip: '页面下方“藏宝点数据与自动更新”显示六个重点地区每15天的更新状态；全球需配置获授权CSV来源后才每6个月更新。正文发布后请到官网编辑。'
     }
   ];
   const dialog = find('guide');
   let step = 0;
   let highlightTimer;
-  function seen() { try { localStorage.setItem('geolog-guide-v1', 'seen'); } catch (_) {} }
+  function seen() { try { localStorage.setItem('geolog-guide-v2', 'seen'); } catch (_) {} }
   function show() {
     const item = steps[step];
     find('guide-count').textContent = `第 ${step + 1} 步，共 ${steps.length} 步`;
@@ -93,5 +93,5 @@
     target.classList.add('guide-highlight');
     highlightTimer = setTimeout(() => target.classList.remove('guide-highlight'), 5000);
   };
-  try { if (!localStorage.getItem('geolog-guide-v1')) open(); } catch (_) { open(); }
+  try { if (!localStorage.getItem('geolog-guide-v2')) open(); } catch (_) { open(); }
 })();
