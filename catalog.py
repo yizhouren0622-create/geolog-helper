@@ -150,7 +150,7 @@ class Catalog:
             for row in rows:
                 self.insert(conn, row)
 
-    def search(self, keyword='', box=None, limit=2000):
+    def search(self, keyword='', box=None, limit=500):
         clauses, args = [], []
         if keyword:
             escaped = str(keyword).replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')[:150]
