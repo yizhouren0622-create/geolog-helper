@@ -150,7 +150,7 @@ class Catalog:
             for row in rows:
                 self.insert(conn, row)
 
-    def search(self, keyword='', box=None, limit=100):
+    def search(self, keyword='', box=None, limit=2000):
         clauses, args = [], []
         if keyword:
             escaped = str(keyword).replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')[:150]
@@ -163,7 +163,7 @@ class Catalog:
         where = ' WHERE ' + ' AND '.join(clauses) if clauses else ''
         with self.db() as conn:
             total = conn.execute('SELECT COUNT(*) FROM caches' + where, args).fetchone()[0]
-            rows = conn.execute('SELECT body FROM caches' + where + ' ORDER BY name LIMIT ?', args + [min(int(limit), 1000)]).fetchall()
+            rows = conn.execute('SELECT body FROM caches' + where + ' ORDER BY name LIMIT ?', args + [max(1, min(int(limit), 2000))]).fetchall()
         return {'caches': [json.loads(row[0]) for row in rows], 'total': total, 'source': 'local'}
 
     def status(self):

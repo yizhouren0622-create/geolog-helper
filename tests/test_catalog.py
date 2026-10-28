@@ -39,6 +39,12 @@ class TestCatalog(unittest.TestCase):
         self.assertEqual(self.store.search(box=[32, 120, 30, 122])['caches'][0]['gc'], 'GC123')
         self.assertEqual(self.store.search("%' OR 1=1 --")['total'], 0)
 
+    def test_local_map_returns_more_than_first_hundred_points(self):
+        self.store.upsert([catalog.normalize({'gc': f'GC{i:X}', 'name': f'Cache {i:04}', 'lat': 31.2, 'lng': 121.4}) for i in range(250)])
+        result = self.store.search(box=[32, 120, 30, 122])
+        self.assertEqual(result['total'], 250)
+        self.assertEqual(len(result['caches']), 250)
+
     def test_failed_region_refresh_preserves_old_data_and_success_date(self):
         old = time.time() - 100
         self.store.set_meta('region:shanghai', {'last_update': old, 'next_update': 0})
