@@ -253,6 +253,14 @@ class GCClient:
             result.update(message='数据更新检查已完成，请查看各区域的更新时间和完整度。', catalog=CATALOG.status())
             if scope in ('all', 'regions') and time.time() < CATALOG.meta('backoff_until', 0):
                 result['message'] = '官网正在限流冷却，本次未完成刷新；旧数据可以继续使用。'
+            elif any(r.get('state') == 'error' for r in result.get('regions', [])):
+                result['message'] = '部分地区更新失败，已保留原有数据；请查看下方各地区状态。'
+            elif any(r.get('state') == 'partial' for r in result.get('regions', [])):
+                result['message'] = '部分地区达到查询上限，数据尚未完整；请查看下方各地区状态。'
+            elif result.get('global', {}).get('state') == 'error':
+                result['message'] = '全球数据更新失败，已保留原有数据；请检查数据来源。'
+            elif result.get('global', {}).get('state') == 'unconfigured' and scope == 'global':
+                result['message'] = '尚未配置全球数据来源，本次没有更新全球数据。'
             return result
         finally:
             if temporary and self.ctx:

@@ -48,6 +48,22 @@ class FakeClient:
             raise app.Problem('caption failed')
 
 class TestPublishing(unittest.TestCase):
+    def test_catalog_refresh_reports_incomplete_results(self):
+        client = app.GCClient()
+        with patch.object(app.CATALOG, 'due_regions', return_value=[{'id': 'shanghai'}]), \
+             patch.object(app.CATALOG, 'status', return_value={}), \
+             patch.object(app.CATALOG, 'meta', return_value=0), \
+             patch.object(client, 'auth', return_value={}), \
+             patch.object(app.CATALOG, 'sync_regions') as sync:
+            for state, expected in [('error', '失败'), ('partial', '尚未完整'), ('ok', '已完成')]:
+                with self.subTest(state=state):
+                    sync.return_value = [{'state': state}]
+                    self.assertIn(expected, client.refresh_catalog({'scope': 'regions'})['message'])
+        with patch.object(app.CATALOG, 'due_regions', return_value=[]), \
+             patch.object(app.CATALOG, 'status', return_value={}), \
+             patch.object(app.CATALOG, 'sync_global', return_value={'state': 'unconfigured'}):
+            self.assertIn('没有更新全球数据', client.refresh_catalog({'scope': 'global'})['message'])
+
     def draft(self, photo=False):
         d = app.new_draft()
         d.update(gc='GC12345', date='2026-01-01', text='真实经历', photos=[{'id':'a'*32, 'caption':'风景','state':'pending'}] if photo else [])
